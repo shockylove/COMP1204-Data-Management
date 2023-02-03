@@ -1,0 +1,85 @@
+% ----
+% COMP1204 CW1 Report Document
+% ----
+\documentclass[]{article}
+\usepackage{courier}
+\usepackage{minted}
+\usepackage{graphicx}
+
+\usepackage[margin=1in]{geometry}
+
+\setlength\parindent{0pt}
+
+\title{COMP1204: Data Management \\ Coursework One: Hurricane Monitoring }
+\author{Xiaoke Li \\ 31951473}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+This work aims to extract useful storm data from a set of hurricane reports in KML format.
+The structure of tags in these reports resemble that of XML files.
+Instead of using an XML parser, the script uses regular expressions and
+the Unix utility sed extensively to filter and group data of individual storms.
+
+{\parskip=7pt
+The extracted data is exported in CSV format. Storm plots are generated as PNG files
+from the CSV output using the provided create\_map\_plot.sh script.}
+
+\section{Create CSV Script}
+
+\begin{minted}[linenos]{bash}
+#!/bin/bash
+
+# 1 Set 2 varialbes to extract data from KML,and save as CSV
+
+kml_input=$1
+csv_output=$2
+
+#   Set the first line of output file
+echo "Timestamp,Latitude,Longitude,MinSeaLevelPressure,MaxIntensity" > $2
+
+# 2 Collect the 5 required data
+# 	Cut off useless parts then add unit at the end of each line
+
+#   grep timestamp
+grep "<dtg>" $1 | cut -d ">" -f 2 | cut -d "<" -f 1 > ts.txt
+
+#   grep latitude
+grep "<lat>" $1 | cut -d ">" -f 2 | cut -d "<" -f 1 \
+    |  sed "s/$/& N/g" >lat.txt
+
+#   grep longitude
+grep "<lon>" $1 | cut -d ">" -f 2 | cut -d "<" -f 1 \
+    | sed "s/$/& W/g" > lon.txt
+
+#   grep max intensity
+grep "<intensity>" $1 | cut -d ">" -f 2 | cut -d "<" -f 1 \
+    | sed "s/$/& knots/g" > inten.txt
+
+#   grep min sealevel pressure
+grep "<minSea.*>" $1 | cut -d ">" -f 2 | cut -d "<" -f 1 \
+    | sed "s/$/& mb/g" > press.txt
+
+# 3 Paste data in order, output final data as a CSV file
+paste -d ',' ts.txt lat.txt lon.txt press.txt inten.txt >>$2
+\end{minted}
+
+\section{Storm Plots}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.8]{al102020.png}
+    \caption{Generated from al102020.kml}
+\end{figure}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.8]{al112020.png}
+    \caption{Generated from al112020.kml}
+\end{figure}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.8]{al122020.png}
+    \caption{Generated from al122020.kml}
+\end{figure}
+
+\end{document}

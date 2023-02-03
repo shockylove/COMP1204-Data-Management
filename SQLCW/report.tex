@@ -1,0 +1,263 @@
+% ----
+% COMP1204 CW1 Report Document
+% ----
+\documentclass[]{article}
+\usepackage{courier}
+\usepackage{minted}
+\usepackage{graphicx}
+
+\usepackage[margin=1in]{geometry}
+
+\setlength\parindent{0pt}
+
+\title{COMP1204: Data Management \\ Coursework Two: SQL }
+\author{Xiaoke Li \\ 31951473}
+
+
+\begin{document}
+\maketitle
+\newpage
+
+\section{The Relational Model}
+
+\subsection{EX1}
+
+Relation: 
+
+
+dataset(dateRep, day, month, year, cases, deaths,\\ countriesAndTerritories, geoId, countryterritoryCode,\\ popData2020, continentExp)\\ \\
+
+attributes and types
+\begin{enumerate}
+    \item dateRep: TEXT
+    \item day: INTEGER
+    \item month: INTEGER
+    \item year: INTEGER
+    \item cases: INTEGER
+    \item deaths: INTEGER
+    \item countriesAndTerritories: TEXT
+    \item geoId: TEXT
+    \item countryterritoryCode: TEXT
+    \item popData2020: INTEGER
+    \item continentExp: TEXT
+\end{enumerate}
+
+\subsection{EX2}
+Minimal set of FDs:\\
+\textbf{(Any two country in the world may or may not have the same population, thus here let assume they will have same value)}
+\begin{enumerate}
+    \item  dateRep $\to$ day
+    \item  dateRep $\to$ month
+    \item  dateRep $\to$ year
+    \item (day,month,year) $\to$ dateRep
+    \item geoId $\to$ countriesAndTerritories
+    \item geoId $\to$ countryterritoryCode
+    \item geoId $\to$ continentExp
+    \item geoId $\to$ popData2020
+    \item (dateRep,geoId)  $\to$ cases
+    \item (dateRep,geoId)  $\to$ deaths\\
+    \textbf{Contrary}
+    \item countriesAndTerritories $\to$ geoId
+    \item countryterritoryCode $\to$ geoId
+\end{enumerate}
+
+\subsection{EX3}
+\textbf{list all the potential candidate keys}
+\begin{enumerate}
+    \item  dateRep,geoId
+    \item  dateRep,countriesAndTerritories
+    \item  dateRep,countryterritoryCode
+\end{enumerate}
+
+\subsection{EX4}
+My primary key: \\
+\textbf{ dateRep,geoId }\\
+Reason: 
+\begin{enumerate}
+    \item  It is candidate key
+    \item  geoId is short and Easy to distinguish
+    \item  Each geoId is unique
+\end{enumerate}
+
+\newpage
+\section{Normalisation}
+\subsection{EX5}
+\textbf{ Partial-key dependencies: }
+\begin{itemize}
+    \item dateRep$\to$ day
+    \item dateRep$\to$ month
+    \item dateRep$\to$ year
+    \item geoId $\to$ countryterritoryCode
+    \item geoId $\to$ continentExp
+    \item geoId $\to$ popData2020
+    \item geoId $\to$ continentExp
+\end{itemize}
+Then we divide it into 3 tables
+\begin{enumerate}
+    \item dateRep,geoId $\to$ cases, deaths
+    \item dateRep $\to$ day, month, year
+    \item geoId $\to$ countriesAndTerritories, countryterritoryCode, popData2020, continentExp
+\end{enumerate}
+
+\subsection{EX6}
+\textbf{2NF Normal Form}
+\begin{itemize}
+    \item Cases(\underline{ dateRep,geoId}, cases, deaths)
+    \item Date(\underline{ dateRep}, day, month, year)
+    \item Country(\underline{ geoId}, countriesAndTerritories, countryterritoryCode, popData2020, continentExp)
+\end{itemize}
+The primary keys for their respective tables are:\\
+-Date - dateRep \\
+-Country - geoId \\
+-Cases - dateRep, geoId \\
+
+The foreign keys for their respective tables are:\\
+-Date - None \\
+-Country - None    \\
+-Cases - dateRep, geoId   \\
+
+\subsection{EX7}
+There are no more transitive dependencies in those relations.
+
+
+\subsection{EX8}
+The relations are the same as which is in 2NF, because there are no transitive dependencies.
+All the non key attributes are either determined by key.
+
+\subsection{EX9}
+It is a BCNF.
+Every determinant is a candidate key!
+
+
+\newpage
+\section{Modelling}
+
+\subsection{EX10}
+\begin{minted}[linenos]{bash}
+sqlite3 coronavirus.db 
+.open coronavirus.db // create new database
+.mode csv 
+//Then use DataGrip -> Import Data From File(Automatic import)
+sqlite3 coronavirus.db .dump > database.sql
+\end{minted}
+
+\subsection{EX11}
+\begin{minted}[linenos]{bash}
+create table Date
+(
+    dateRep Text    not null
+        primary key,
+    day     INTEGER not null,
+    month   INTEGER not null,
+    year    INTEGER not null
+);
+
+create table Country
+(
+    geoId                   TEXT    not null
+        constraint Country_pk
+            primary key,
+    countriesAndTerritories TEXT    not null,
+    countryterritoryCode    TEXT    not null,
+    popData2020             integer not null,
+    continentExp            TEXT    not null
+);
+
+create table Cases
+(
+    dateRep TEXT not null,
+    geoId   TEXT not null,
+    deaths  integer,
+    cases   integer,
+    constraint Cases_pk
+        primary key (dateRep, geoId)
+);
+
+\end{minted}
+
+\subsection{EX12}
+\begin{minted}[linenos]{bash}
+INSERT INTO Date (dateRep, day, month, year)
+SELECT DISTINCT dateRep, day, month, year
+FROM dataset;
+
+INSERT INTO Country (geoId, countryterritoryCode, continentExp, countriesAndTerritories, popData2020)
+SELECT DISTINCT geoId, countryterritoryCode, continentExp, countriesAndTerritories, popData2020
+FROM dataset;
+
+INSERT INTO Cases (dateRep, geoId, cases, deaths)
+SELECT DISTINCT dateRep, geoId, cases, deaths
+FROM dataset;
+\end{minted}
+
+\subsection{EX13}
+\begin{minted}[linenos]{bash}
+sqlite3 coronavirus.db < dataset.sql
+sqlite3 coronavirus.db < ex11.sql
+sqlite3 coronavirus.db < ex12.sql  
+// use test.db to replace coronavirus.db
+\end{minted}
+
+
+\section{Querying}
+\subsection{EX14}
+\begin{minted}[linenos]{bash}
+SELECT sum(cases) AS total_cases, sum(deaths) AS total_deaths
+FROM Cases;
+\end{minted}
+
+\subsection{EX15}
+\begin{minted}[linenos]{bash}
+SELECT Cases.dateRep,cases
+FROM Cases
+INNER JOIN Date ON Date.dateRep = Cases.dateRep
+WHERE Cases.geoId = 'UK'
+ORDER BY year,month,day ASC;
+\end{minted}
+
+\subsection{EX16}
+\begin{minted}[linenos]{bash}
+select countriesAndTerritories AS country, Cases.dateRep AS date,
+       Cases.cases, Cases.deaths
+from Cases
+natural join Country
+natural join Date
+GROUP BY country,dateRep
+ORDER BY countriesAndTerritories ASC ,year,month,day ASC
+\end{minted}
+
+
+\subsection{EX17}
+\begin{minted}[linenos]{bash}
+SELECT Country.countriesAndTerritories ,
+       round((sum(cases) * 1.0 / popData2020) * 100, 2) AS "cases %",
+       round((sum(deaths) * 1.0 / popData2020) * 100, 2) AS "deaths %"
+FROM Cases
+NATURAL JOIN Country
+GROUP BY  countriesAndTerritories,popData2020;
+\end{minted}
+
+\subsection{EX18}
+\begin{minted}[linenos]{bash}
+SELECT countriesAndTerritories AS "country",
+       ((CAST(sum(deaths) AS REAL) * 100) / sum(cases)) AS "deaths % cases"
+FROM Cases
+INNER JOIN Country ON Cases.geoId = Country.geoId
+GROUP BY country
+ORDER BY "deaths % cases" DESC
+LIMIT 10;
+\end{minted}
+
+\subsection{EX19}
+\begin{minted}[linenos]{bash}
+SELECT Cases.dateRep AS "date",
+       sum(deaths) OVER win1 AS "cumulative UK deaths",
+       sum(cases) OVER win1 AS "cumulative UK cases"
+FROM Cases
+NATURAL JOIN Date
+WHERE geoid='UK'
+WINDOW win1 AS (ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+ORDER BY year, month, day ASC ;
+\end{minted}
+
+\end{document}

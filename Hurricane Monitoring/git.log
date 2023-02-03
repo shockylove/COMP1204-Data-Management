@@ -1,0 +1,26 @@
+commit fd45438a0debd7a44d86239cce83e8a74d78ca91
+Author: Xiaoke Li <xl5u20@soton.ac.uk>
+Date:   Sun Mar 13 19:41:26 2022 +0000
+
+    Upload report.log--the history of Latex
+
+commit f85efa6d9c40c48879aa49798b006583cda2cd29
+Author: Xiaoke Li <xl5u20@soton.ac.uk>
+Date:   Sun Mar 13 19:27:45 2022 +0000
+
+    1 Create storm plots
+    2 Write Latex report, including .tex and .pdf
+
+commit 8889e0412a1d99aed7ced361f7e7b2a36d9b3524
+Author: Xiaoke Li <xl5u20@soton.ac.uk>
+Date:   Sun Mar 13 14:43:52 2022 +0000
+
+    Edition 1 of create_csv.sh
+    But there is a bug. "paste" command cannot be used correctly.
+
+commit 0682f475f0e2e0e8286518412868b5b39ad76d04
+Author: Xiaoke Li <xl5u20@soton.ac.uk>
+Date:   Tue Mar 8 21:28:05 2022 +0000
+
+    last time git push went wrong
+    add one file to try again.
